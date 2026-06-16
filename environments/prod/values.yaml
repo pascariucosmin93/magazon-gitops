@@ -1,0 +1,257 @@
+namespaceOverride: microshop
+createNamespace: false
+
+config:
+  POSTGRES_HOST: 192.168.1.16
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: microshop
+  POSTGRES_USER: microshop
+  ADMIN_EMAIL: admin@microshop.local
+  REDIS_URL: redis://redis:6379/0
+  KAFKA_BOOTSTRAP_SERVERS: kafka.kafka.svc.cluster.local:9092
+  PUBLIC_BASE_URL: "http://192.168.1.8:8081"
+
+# Secret management strategy:
+#
+# manage: false (default) — ArgoCD/GitOps mode.
+#   The chart does NOT create the Secret. You must pre-create it:
+#   kubectl create secret generic microshop-secret -n microshop \
+#     --from-literal=POSTGRES_PASSWORD='...' \
+#     --from-literal=AUTH_POSTGRES_PASSWORD='...' \
+#     --from-literal=PRODUCT_POSTGRES_PASSWORD='...' \
+#     --from-literal=ORDER_POSTGRES_PASSWORD='...' \
+#     --from-literal=INVENTORY_POSTGRES_PASSWORD='...' \
+#     --from-literal=PAYMENT_POSTGRES_PASSWORD='...' \
+#     --from-literal=ADMIN_PASSWORD='...' \
+#     --from-literal=JWT_SECRET='...' \
+#     --from-literal=INTERNAL_API_TOKEN='...' \
+#     --from-literal=STRIPE_SECRET_KEY='sk_live_...' \
+#     --from-literal=STRIPE_WEBHOOK_SECRET='whsec_...'
+#   For automated injection use External Secrets Operator or Sealed Secrets.
+#
+# manage: true — manual/CI mode.
+#   Helm creates the Secret. Supply values at deploy time (never in this file):
+#   helm upgrade --install microshop ./helm/microshop \
+#     --set secret.manage=true \
+#     --set secret.postgresPassword='...' \
+#     --set secret.jwtSecret='...' \
+#     --set secret.internalApiToken='...' \
+#     --set secret.stripeSecretKey='sk_live_...' \
+#     --set secret.stripeWebhookSecret='whsec_...'
+secret:
+  manage: false
+  # Legacy fallback used by non-DB services because shared settings still load it.
+  postgresPassword: ""
+  authPostgresPassword: ""
+  productPostgresPassword: ""
+  orderPostgresPassword: ""
+  inventoryPostgresPassword: ""
+  paymentPostgresPassword: ""
+  adminPassword: ""
+  jwtSecret: ""
+  internalApiToken: ""
+  stripeSecretKey: ""
+  stripeWebhookSecret: ""
+
+redis:
+  image: redis:7-alpine
+  persistence:
+    enabled: true
+    storageClass: nfs-csi
+    accessModes:
+      - ReadWriteMany
+    size: 2Gi
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+networkPolicies:
+  enabled: true
+  # Set to the namespace where Prometheus is deployed to allow scraping.
+  # Leave empty to skip the monitoring allow rule.
+  monitoringNamespace: monitoring
+
+services:
+  auth-service:
+    repository: ghcr.io/pascariucosmin93/magazon/auth-service
+    tag: 0.0.73
+    containerPort: 8000
+    servicePort: 8000
+    serviceType: ClusterIP
+    replicas: 2
+    autoscaling:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 2
+      targetCPUUtilizationPercentage: 95
+    resources:
+      requests:
+        cpu: 150m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    runMigrations: true
+    database:
+      name: microshop_auth
+      user: microshop_auth
+      passwordSecretKey: AUTH_POSTGRES_PASSWORD
+  product-service:
+    repository: ghcr.io/pascariucosmin93/magazon/product-service
+    tag: 0.0.73
+    containerPort: 8000
+    servicePort: 8000
+    serviceType: ClusterIP
+    replicas: 2
+    autoscaling:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 2
+      targetCPUUtilizationPercentage: 95
+    resources:
+      requests:
+        cpu: 150m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    runMigrations: true
+    database:
+      name: microshop_product
+      user: microshop_product
+      passwordSecretKey: PRODUCT_POSTGRES_PASSWORD
+  cart-service:
+    repository: ghcr.io/pascariucosmin93/magazon/cart-service
+    tag: 0.0.73
+    containerPort: 8000
+    servicePort: 8000
+    serviceType: ClusterIP
+    replicas: 1
+    autoscaling:
+      enabled: true
+      minReplicas: 1
+      maxReplicas: 2
+      targetCPUUtilizationPercentage: 85
+    resources:
+      requests:
+        cpu: 125m
+        memory: 128Mi
+      limits:
+        cpu: 300m
+        memory: 256Mi
+  order-service:
+    repository: ghcr.io/pascariucosmin93/magazon/order-service
+    tag: 0.0.73
+    containerPort: 8000
+    servicePort: 8000
+    serviceType: ClusterIP
+    replicas: 2
+    autoscaling:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 2
+      targetCPUUtilizationPercentage: 95
+    resources:
+      requests:
+        cpu: 150m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    runMigrations: true
+    database:
+      name: microshop_order
+      user: microshop_order
+      passwordSecretKey: ORDER_POSTGRES_PASSWORD
+  inventory-service:
+    repository: ghcr.io/pascariucosmin93/magazon/inventory-service
+    tag: 0.0.73
+    containerPort: 8000
+    servicePort: 8000
+    serviceType: ClusterIP
+    replicas: 1
+    autoscaling:
+      enabled: true
+      minReplicas: 1
+      maxReplicas: 2
+      targetCPUUtilizationPercentage: 85
+    resources:
+      requests:
+        cpu: 150m
+        memory: 128Mi
+      limits:
+        cpu: 400m
+        memory: 384Mi
+    runMigrations: true
+    database:
+      name: microshop_inventory
+      user: microshop_inventory
+      passwordSecretKey: INVENTORY_POSTGRES_PASSWORD
+  payment-service:
+    repository: ghcr.io/pascariucosmin93/magazon/payment-service
+    tag: 0.0.73
+    containerPort: 8000
+    servicePort: 8000
+    serviceType: ClusterIP
+    replicas: 2
+    autoscaling:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 2
+      targetCPUUtilizationPercentage: 95
+    resources:
+      requests:
+        cpu: 150m
+        memory: 128Mi
+      limits:
+        cpu: 400m
+        memory: 384Mi
+    runMigrations: true
+    database:
+      name: microshop_payment
+      user: microshop_payment
+      passwordSecretKey: PAYMENT_POSTGRES_PASSWORD
+  notification-service:
+    repository: ghcr.io/pascariucosmin93/magazon/notification-service
+    tag: 0.0.73
+    containerPort: 8000
+    servicePort: 8000
+    serviceType: ClusterIP
+    replicas: 1
+    autoscaling:
+      enabled: true
+      minReplicas: 1
+      maxReplicas: 2
+      targetCPUUtilizationPercentage: 85
+    resources:
+      requests:
+        cpu: 200m
+        memory: 96Mi
+      limits:
+        cpu: 250m
+        memory: 256Mi
+  frontend:
+    repository: ghcr.io/pascariucosmin93/magazon/frontend
+    tag: 0.0.73
+    containerPort: 80
+    servicePort: 80
+    serviceType: LoadBalancer
+    externalTrafficPolicy: Local
+    loadBalancerIP: 10.10.2.50
+    replicas: 2
+    autoscaling:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 2
+      targetCPUUtilizationPercentage: 95
+    resources:
+      requests:
+        cpu: 75m
+        memory: 64Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
