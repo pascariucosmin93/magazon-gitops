@@ -19,9 +19,10 @@ Argo CD uses multiple sources: the chart comes from `magazon`, while values come
 ## Required setup
 
 1. Keep `config.PUBLIC_BASE_URL` in `environments/prod/values.yaml` equal to the public URL users open in the browser. It can stay on the current IP while there is no Cloudflare domain.
-2. Pre-create `microshop-secret` in the `microshop` namespace or install External Secrets/Sealed Secrets.
-3. Configure Argo CD repository access for `magazon` and `magazon-gitops` if the repos are private.
-4. Apply `bootstrap/magazon-root.yaml` into the `argocd` namespace.
+2. Keep `config.OLLAMA_BASE_URL` pointed at the internal Ollama service. Current value: `http://ollama.ollama.svc.cluster.local:11434`.
+3. Pre-create `microshop-secret` in the `microshop` namespace or install External Secrets/Sealed Secrets.
+4. Configure Argo CD repository access for `magazon` and `magazon-gitops` if the repos are private.
+5. Apply `bootstrap/magazon-root.yaml` into the `argocd` namespace.
 
 ## CI access
 
