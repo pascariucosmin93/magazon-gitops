@@ -10,7 +10,7 @@ spec:
     namespace: microshop
   sources:
     - repoURL: https://github.com/pascariucosmin93/magazon.git
-      targetRevision: 0.0.78
+      targetRevision: 0.0.83
       path: helm/microshop
       helm:
         valueFiles:
