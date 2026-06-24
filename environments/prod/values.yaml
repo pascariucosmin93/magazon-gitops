@@ -105,7 +105,7 @@ services:
       passwordSecretKey: AUTH_POSTGRES_PASSWORD
   product-service:
     repository: ghcr.io/pascariucosmin93/magazon/product-service
-    tag: 0.0.85
+    tag: 0.0.90
     containerPort: 8000
     servicePort: 8000
     serviceType: ClusterIP
@@ -196,7 +196,7 @@ services:
       passwordSecretKey: INVENTORY_POSTGRES_PASSWORD
   payment-service:
     repository: ghcr.io/pascariucosmin93/magazon/payment-service
-    tag: 0.0.85
+    tag: 0.0.90
     containerPort: 8000
     servicePort: 8000
     serviceType: ClusterIP
