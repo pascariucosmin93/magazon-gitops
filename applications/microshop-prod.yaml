@@ -18,6 +18,9 @@ spec:
     - repoURL: https://github.com/pascariucosmin93/magazon-gitops.git
       targetRevision: main
       ref: values
+    - repoURL: https://github.com/pascariucosmin93/magazon-gitops.git
+      targetRevision: main
+      path: overrides/microshop-prod
   syncPolicy:
     automated:
       prune: true
