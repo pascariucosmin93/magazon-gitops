@@ -262,7 +262,7 @@ services:
     containerPort: 8080
     servicePort: 80
     serviceType: LoadBalancer
-    externalTrafficPolicy: Local
+    externalTrafficPolicy: Cluster
     loadBalancerIP: 10.10.2.50
     replicas: 2
     autoscaling:
