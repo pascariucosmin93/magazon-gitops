@@ -5,8 +5,10 @@ GitOps state for the Magazon production deployment.
 ## Layout
 
 - `applications/microshop-prod.yaml`: Argo CD `Application` for production.
+- `applications/ollama.yaml`: Argo CD `Application` for the Ollama runtime.
 - `bootstrap/magazon-root.yaml`: root Argo CD `Application` that manages the apps in `applications/`.
 - `environments/prod/values.yaml`: production Helm values consumed by Argo CD.
+- `infrastructure/ollama/`: raw Kubernetes manifests for Ollama, including the PVC used to persist downloaded models.
 
 The Helm chart stays in the application repository:
 
@@ -23,6 +25,10 @@ Argo CD uses multiple sources: the chart comes from `magazon`, while values come
 3. Pre-create `microshop-secret` in the `microshop` namespace or install External Secrets/Sealed Secrets.
 4. Configure Argo CD repository access for `magazon` and `magazon-gitops` if the repos are private.
 5. Apply `bootstrap/magazon-root.yaml` into the `argocd` namespace.
+
+Ollama stores models under `/root/.ollama`. The manifests in `infrastructure/ollama/`
+mount that path from the `ollama-data` PVC, so models persist across pod restarts and
+re-scheduling.
 
 ## CI access
 
