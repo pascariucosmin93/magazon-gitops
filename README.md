@@ -30,6 +30,10 @@ Ollama stores models under `/root/.ollama`. The manifests in `infrastructure/oll
 mount that path from the `ollama-data` PVC, so models persist across pod restarts and
 re-scheduling.
 
+On startup, the Ollama pod now checks for the configured model and pulls it if it is
+missing. Keep `infrastructure/ollama/configmap.yaml` aligned with
+`environments/prod/values.yaml` so the runtime model matches the application setting.
+
 ## CI access
 
 The production workflow in `magazon` updates `applications/microshop-prod.yaml` and `environments/prod/values.yaml` after publishing images.

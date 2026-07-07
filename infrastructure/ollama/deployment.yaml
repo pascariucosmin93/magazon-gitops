@@ -24,9 +24,26 @@ spec:
           env:
             - name: OLLAMA_HOST
               value: 0.0.0.0:11434
+            - name: OLLAMA_MODEL
+              valueFrom:
+                configMapKeyRef:
+                  name: ollama-config
+                  key: model
           volumeMounts:
             - name: ollama-data
               mountPath: /root/.ollama
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - |
+                    for _ in $(seq 1 60); do
+                      ollama list >/dev/null 2>&1 && break
+                      sleep 2
+                    done
+                    ollama show "$OLLAMA_MODEL" >/dev/null 2>&1 || ollama pull "$OLLAMA_MODEL"
           resources:
             requests:
               cpu: 500m
@@ -35,10 +52,14 @@ spec:
               cpu: "2"
               memory: 4Gi
           readinessProbe:
-            tcpSocket:
-              port: 11434
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - ollama show "$OLLAMA_MODEL" >/dev/null 2>&1
             initialDelaySeconds: 5
             periodSeconds: 10
+            failureThreshold: 12
           livenessProbe:
             tcpSocket:
               port: 11434
