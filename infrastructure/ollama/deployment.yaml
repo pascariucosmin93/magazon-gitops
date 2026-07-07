@@ -23,7 +23,7 @@ spec:
                   - key: kubernetes.io/hostname
                     operator: In
                     values:
-                      - worker2
+                      - worker-2
       containers:
         - name: ollama
           image: ollama/ollama:0.12.1
